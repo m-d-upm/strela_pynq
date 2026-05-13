@@ -8,5 +8,5 @@ make -C 3rdparty/linux-xlnx ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CC=arm-l
 make -C 3rdparty/linux-xlnx ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CC=arm-linux-gnueabihf-gcc-13 -j$(nproc) modules
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CC=arm-linux-gnueabihf-gcc-13
 
-# dtc -I fs -O dts /proc/devive-tree
+# dtc -I fs -O dts /proc/device-tree
 # dtc -I fs -O dts /sys/firmware/devicetree/base

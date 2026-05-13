@@ -1,0 +1,1 @@
+savedcmd_/home/k/Projects/strela_pynq/src/kmd/Module.symvers :=  scripts/mod/modpost -M -m       -o /home/k/Projects/strela_pynq/src/kmd/Module.symvers -T /home/k/Projects/strela_pynq/src/kmd/modules.order -i Module.symvers -e 

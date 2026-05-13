@@ -1,17 +1,24 @@
-KDIR ?= $(PWD)/3rdparty/linux-xlnx
-ccflags-y += -I$(src)/include
+SRC_PATH := $(PWD)/src
+KSRC := $(PWD)/3rdparty/linux-xlnx
 
-obj-m += src/strela.o src/xilinx-afi.o
+.PHONY: all clean
 
-all: test prep_afi
-	make -C $(KDIR) M=$(PWD) modules
+all: kernel-build-module test
+
+kernel-build-module:
+	@cd $(SRC_PATH)/kmd; \
+	$(MAKE) KDIR=$(KSRC) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) all
 
 test:
-	$(CC) -g -Iinclude src/test_bypass.c -o src/test_bypass
+	@cd $(SRC_PATH)/umd; \
+	$(MAKE) TOOLCHAIN_PREFIX=$(CROSS_COMPILE)
 
-prep_afi:
-	cp $(KDIR)/drivers/fpga/xilinx-afi.c src
+kmd-clean:
+	@cd $(SRC_PATH)/kmd; \
+	$(MAKE) KDIR=$(KSRC) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) clean
 
-clean:
-	make -C $(KDIR) M=$(PWD) clean
-	rm -f src/test_bypass src/xilinx-afi.c
+umd-clean:
+	@cd $(SRC_PATH)/umd; \
+	$(MAKE) clean
+
+clean: kmd-clean umd-clean
