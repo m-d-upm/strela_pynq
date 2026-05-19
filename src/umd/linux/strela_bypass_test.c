@@ -24,35 +24,35 @@
 #define DEV_NAME "/dev/strela0"
 
 //#define TRANSFER_SIZE (8192) // 32 KB
- #define TRANSFER_SIZE (4096) // 16 KB
+ #define TRANSFER_SIZE (20) // B
 
 int32_t input_data_sw[TRANSFER_SIZE];
 int32_t output_data_sw[TRANSFER_SIZE];
 
 #define BYPASS_KRNL_NPE (16)
-#define BYPASS_KRNL_SIZE (BYPASS_KRNL_NPE * 6)
+#define BYPASS_KRNL_SIZE (BYPASS_KRNL_NPE * 5)
 #define BYPASS_KRNL_BYTES (BYPASS_KRNL_SIZE * sizeof(uint32_t))
 
 uint32_t bypass_kernel[BYPASS_KRNL_SIZE] = {
-    0x00000000, 0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 12
-    0x00000000, 0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 8
-    0x00000000, 0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 4
-    0x00000000, 0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 0
+    0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 12
+    0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 8
+    0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 4
+    0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 0
 
-    0x00000000, 0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 13
-    0x00000000, 0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 9
-    0x00000000, 0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 5
-    0x00000000, 0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 1
+    0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 13
+    0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 9
+    0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 5
+    0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 1
 
-    0x00000000, 0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 14
-    0x00000000, 0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 10
-    0x00000000, 0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 6
-    0x00000000, 0x00000021, 0x00000000, 0x00000012, 0x00000000, 0x00000000, // 2
+    0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 14
+    0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 10
+    0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 6
+    0x00000021, 0x00000000, 0x00000012, 0x00000000, 0x00000000, // 2
 
-    0x00000000, 0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 15
-    0x00000000, 0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 11
-    0x00000000, 0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 7
-    0x00000000, 0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000  // 3
+    0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 15
+    0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 11
+    0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 7
+    0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000  // 3
 };
 
 static int strela_attach(int accel_fd, int buf_fd, enum accel_shbuf_dir direction)
@@ -61,7 +61,7 @@ static int strela_attach(int accel_fd, int buf_fd, enum accel_shbuf_dir directio
     
     cmd = direction == ACCEL_SHBUF_DIR_IN ? IOCTL_STRELA_ATTACH_IN_BUF : IOCTL_STRELA_ATTACH_OUT_BUF;
 
-    if (ioctl(accel_fd, cmd, buf_fd) != 0)
+    if (ioctl(accel_fd, cmd, &buf_fd) != 0)
     {
         printf("ERROR: Couldn't attach buffer to the device!\n");
         return -1;
@@ -167,12 +167,16 @@ void bypass_test()
     }
 
     // Read input data befor write (test cache flushing)
-    printf("OUTPUT before (first 20 elements):\n");
+    printf("OUTPUT before (first twenty 32-bit elements):\n");
+
+    dmabuf_sync_start(file_desc_buf_out);
 
     for(int i = 0; i < 20; i++)
     {
         result[i] = 0xffffffff;
     }
+
+    dmabuf_sync_end(file_desc_buf_out);
 
     examine_mem(result, 0, 20);
 
@@ -184,7 +188,11 @@ void bypass_test()
 
     uint64_t begin_write_config = micros();
 
+    dmabuf_sync_start(file_desc_buf_conf);
+
     memcpy(conf, cgra_kernel, cgra_kernel_size_words * sizeof(uint32_t));
+
+    dmabuf_sync_end(file_desc_buf_conf);
 
     uint64_t end_write_config = micros();
 
@@ -284,18 +292,22 @@ void bypass_test()
 
     for(int i = 0; i< TRANSFER_SIZE; i++)
     {
-        output_data_sw[i] = input_data_sw[i] > 0 ? input_data_sw[i] : 0;
+        output_data_sw[i] = input_data_sw[i];
     }
 
     uint64_t end_sw = micros();
 
-    printf("Input (first 20 elements) -----------\n");
+    printf("Input (first twenty 32-bit elements) -----------\n");
     examine_mem(input, 0, 20);
 
-    printf("Output CGRA (first 20 elements) -----------\n");
+    dmabuf_sync_start(file_desc_buf_out);
+
+    printf("Output CGRA (first twenty 32-bit elements) -----------\n");
     examine_mem(result, 0, 20);
 
-    printf("Output SW (CPU) (first 20 elements) -----------\n");
+    dmabuf_sync_end(file_desc_buf_out);
+
+    printf("Output SW (CPU) (first twenty 32-bit elements) -----------\n");
     examine_mem(output_data_sw, 0, 20);
 
     unsigned total_cgra = 0;

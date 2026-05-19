@@ -13,8 +13,8 @@ int dmabuf_open()
 {
     int fd;
 
-    // requires a linux,cma region defined in the device tree
-    fd = open("/dev/dma_heap/linux,cma", O_RDWR, 0);
+    // requires a CMA region defined in the device tree
+    fd = open("/dev/dma_heap/reserved", O_RDWR, 0);
 
     return fd; // fd of the dma-buf heap framework object
 }

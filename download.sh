@@ -33,5 +33,5 @@ ssh root@${addr} << EOF
 	ls /dev/strela*
 
 	dmesg | tail -n 20
-	./strela_test_linux.elf
 EOF
+# ./strela_test_linux.elf

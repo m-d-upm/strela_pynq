@@ -1,0 +1,8 @@
+sdt_out/
+*.bit
+*.dtbo
+*.bin
+*.xsa
+*.bif
+pl.dts
+.Xil/
