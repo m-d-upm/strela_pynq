@@ -1,1 +1,0 @@
-savedcmd_/home/k/Projects/strela_pynq/src/kmd/strela/strela.mod := printf '%s\n'   strela.o | awk '!x[$$0]++ { print("/home/k/Projects/strela_pynq/src/kmd/strela/"$$0) }' > /home/k/Projects/strela_pynq/src/kmd/strela/strela.mod
