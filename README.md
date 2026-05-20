@@ -1,9 +1,11 @@
-Dependencies
+# strela_pynq
+
+## Dependencies
 
   * `linux-xlnx` tag `xilinx-v2025.2`
   * GCC 13.3.0
 
-[Xilinx/AMD are bad](https://wiki.archlinux.org/title/Xilinx_Vivado) hence we need to dedicate and entire VM to their software.
+[Xilinx/AMD are bad](https://wiki.archlinux.org/title/Xilinx_Vivado) hence we need to dedicate an entire VM to their software.
 
 
 ```
@@ -39,4 +41,16 @@ wsl --shutdown
 wsl -d Ubuntu
 net use Z: "\\wsl.localhost\Ubuntu"
 net use /delete Z:
+```
+
+## Linux kernel CONFIG options
+
+Make sure the following options are enabled when building the kernel:
+```
+CONFIG_CMA
+CONFIG_DMA_CMA
+CONFIG_DMA_SHARED_BUFFER
+CONFIG_DMABUF_HEAPS
+CONFIG_DMABUF_HEAPS_SYSTEM
+CONFIG_DMABUF_HEAPS_CMA
 ```
