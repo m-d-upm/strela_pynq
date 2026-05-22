@@ -418,6 +418,7 @@ static int strela_probe(struct platform_device *pdev)
 
 	if (dummy_reg_value != read_reg_value) {
 		dev_err(dev, "STRELA: There was a problem with accessing the registers after they were memory mapped\n");
+		ret = -EIO;
 		goto fail;
 	}
 
@@ -440,12 +441,15 @@ static int strela_probe(struct platform_device *pdev)
 
 	if (irq < 0) {
 		dev_err(dev, "failed to get IRQ\n");
+		ret = irq;
 		goto irq_fail;
 	}
 
 	dev_info(dev, "requesting shared IRQ: %d\n", irq);
 
-	if (devm_request_threaded_irq(dev, irq, strela_irq_check, strela_irq_process, IRQF_ONESHOT | IRQF_SHARED, dev_name(dev), strela_dev))	{
+	ret = devm_request_threaded_irq(dev, irq, strela_irq_check, strela_irq_process, IRQF_ONESHOT | IRQF_SHARED, dev_name(dev), strela_dev)
+
+	if (ret) {
 		dev_err(dev, "failure when requesting IRQ %d for shared interrupt line\n", irq);
 		goto irq_fail;
 	}
