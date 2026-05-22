@@ -210,7 +210,6 @@ static long strela_ioctl(struct file *fp, unsigned int ioctl_num, unsigned long 
 		// TO-DO: flush data L1 cache either here or in user-space library
 
 		// reset STRELA CGRA and DMA
-		iowrite32(STRELA_CTRL_BIT_CLEAR_STATE, strela_dev->regs.strela_ctrl);
 		iowrite32(STRELA_CTRL_BIT_CLEAR_CONFIG, strela_dev->regs.strela_ctrl);
 		iowrite32(1U, strela_dev->regs.strela_reset_dma);
 
@@ -219,6 +218,8 @@ static long strela_ioctl(struct file *fp, unsigned int ioctl_num, unsigned long 
 
 		ret = wait_event_interruptible(strela_dev->wq_conf, strela_dev->wake_up_int_conf == true);
 		strela_dev->wake_up_int_conf = false;
+
+		iowrite32(STRELA_CTRL_BIT_CLEAR_STATE, strela_dev->regs.strela_ctrl); // reset data lines/buffers of CGRA
 
 		break;
 	}
