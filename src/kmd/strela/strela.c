@@ -448,7 +448,7 @@ static int strela_probe(struct platform_device *pdev)
 
 	dev_info(dev, "requesting shared IRQ: %d\n", irq);
 
-	ret = devm_request_threaded_irq(dev, irq, strela_irq_check, strela_irq_process, IRQF_ONESHOT | IRQF_SHARED, dev_name(dev), strela_dev)
+	ret = devm_request_threaded_irq(dev, irq, strela_irq_check, strela_irq_process, IRQF_ONESHOT | IRQF_SHARED, dev_name(dev), strela_dev);
 
 	if (ret) {
 		dev_err(dev, "failure when requesting IRQ %d for shared interrupt line\n", irq);

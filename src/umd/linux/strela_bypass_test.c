@@ -24,16 +24,16 @@
 #define DEV_NAME "/dev/strela0"
 
 //#define TRANSFER_SIZE (8192) // 32 KB
- #define TRANSFER_SIZE (20) // B
+#define TRANSFER_SIZE (20) // B
 
-int32_t input_data_sw[TRANSFER_SIZE];
-int32_t output_data_sw[TRANSFER_SIZE];
+static int32_t input_data_sw[TRANSFER_SIZE];
+static int32_t output_data_sw[TRANSFER_SIZE];
 
 #define BYPASS_KRNL_NPE (16)
 #define BYPASS_KRNL_SIZE (BYPASS_KRNL_NPE * 5)
 #define BYPASS_KRNL_BYTES (BYPASS_KRNL_SIZE * sizeof(uint32_t))
 
-uint32_t bypass_kernel[BYPASS_KRNL_SIZE] = {
+static uint32_t bypass_kernel[BYPASS_KRNL_SIZE] = {
     0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 12
     0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 8
     0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 4

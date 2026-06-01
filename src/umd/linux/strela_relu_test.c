@@ -24,16 +24,16 @@
 #define DEV_NAME "/dev/strela0"
 
 //#define TRANSFER_SIZE (8192) // 32 KB
- #define TRANSFER_SIZE (20) // B
+#define TRANSFER_SIZE (20) // B
 
-int32_t input_data_sw[TRANSFER_SIZE];
-int32_t output_data_sw[TRANSFER_SIZE];
+static int32_t input_data_sw[TRANSFER_SIZE];
+static int32_t output_data_sw[TRANSFER_SIZE];
 
 #define RELU_KRNL_NPE (16)
 #define RELU_KRNL_SIZE (RELU_KRNL_NPE * 5)
 #define RELU_KRNL_BYTES (RELU_KRNL_SIZE * sizeof(uint32_t))
 
-uint32_t RELU_kernel[RELU_KRNL_SIZE] = {
+static uint32_t RELU_kernel[RELU_KRNL_SIZE] = {
     0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 12
     0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 8
     0x00004083, 0x20CC0300, 0x000000A0, 0x00000000, 0x00000000, // 4
