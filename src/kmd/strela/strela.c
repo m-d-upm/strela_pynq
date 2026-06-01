@@ -219,7 +219,7 @@ static long strela_ioctl(struct file *fp, unsigned int ioctl_num, unsigned long 
 		ret = wait_event_interruptible(strela_dev->wq_conf, strela_dev->wake_up_int_conf == true);
 		strela_dev->wake_up_int_conf = false;
 
-		iowrite32(STRELA_CTRL_BIT_CLEAR_STATE, strela_dev->regs.strela_ctrl); // reset data lines/buffers of CGRA
+		//iowrite32(STRELA_CTRL_BIT_CLEAR_STATE, strela_dev->regs.strela_ctrl); // reset data lines/buffers of CGRA
 
 		break;
 	}
@@ -310,6 +310,7 @@ static irqreturn_t strela_irq_check(int irq, void *data)
 		return IRQ_WAKE_THREAD;
 	} else if (status_reg & STRELA_CTRL_BIT_PENDING_INT_CONFIG) {
 		iowrite32(STRELA_CTRL_BIT_CLEAR_INT_CONFIG, strela_dev->regs.strela_ctrl);
+		iowrite32(STRELA_CTRL_BIT_CLEAR_STATE, strela_dev->regs.strela_ctrl); // reset data lines/buffers of CGRA
 		strela_dev->wake_up_int_conf = true;
 
 		return IRQ_WAKE_THREAD;

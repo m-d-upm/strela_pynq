@@ -18,6 +18,9 @@ int main(int argc, char* argv[])
     printf("Running bypass test...\r\n");
     bypass_test();
 
+    printf("Running ReLu test...\r\n");
+    relu_test();
+
     //pthread_create(&bypass_test_th, NULL, bypass_test, NULL);
     
     //pthread_join(bypass_test_th, NULL);
