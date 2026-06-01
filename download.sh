@@ -3,7 +3,7 @@
 set -e
 
 name=$1
-addr=10.100.4.202
+addr=10.100.4.204
 
 scp "${name}.bit.bin" "${name}.dtbo" root@${addr}:/lib/firmware
 scp src/kmd/strela/strela.ko root@${addr}:/root

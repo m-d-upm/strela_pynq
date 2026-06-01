@@ -470,7 +470,7 @@ fail:
 	return ret;
 };
 
-static void strela_remove(struct platform_device *pdev)
+static int strela_remove(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 	struct strela_device *strela_dev = platform_get_drvdata(pdev);
@@ -482,6 +482,8 @@ static void strela_remove(struct platform_device *pdev)
 	misc_deregister(&strela_dev->miscdev);
 
 	dev_info(dev, "STRELA: Device removed\n");
+
+	return 0;
 };
 
 static void strela_shutdown(struct platform_device *pdev)
