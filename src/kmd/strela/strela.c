@@ -492,7 +492,7 @@ static void strela_shutdown(struct platform_device *pdev)
 };
 
 static const struct of_device_id strela_of_match[] = {
-	{ .compatible = "CEI,strela", },
+	{ .compatible = "xlnx,cgra-axi-lite-1.0", },
 	{ },
 };
 
@@ -500,7 +500,7 @@ MODULE_DEVICE_TABLE(of, strela_of_match);
 
 static struct platform_driver strela_driver = {
 	.driver	= {
-		.name					= "CEI,strela",
+		.name					= "xlnx,cgra-axi-lite-1.0",
 		.of_match_table			= strela_of_match,
 		.suppress_bind_attrs	= true,
 	},

@@ -1,69 +1,19 @@
-#!/usr/bin/awk -f
+#!/bin/sh
 
-# This script converts the first device tree in the second one. It essentially
-# peels the first two levels of the device tree and embeds the remaining content
-# in a device tree overlay.
+set -e
 
-# / {
-#         amba_pl: amba_pl {
-#                 (...)
-#         };
-# };
+support_archive_name=$1
 
-# /dts-v1/;
-# /plugin/;
-#
-# / {
-#         fragment@0 {
-#                 target-path = "/fpga-full";
-#                 __overlay__ {
-#                         (...)
-#                 };
-#         };
-# };
+xsct tools/generate_sdt.tcl "${support_archive_name}.xsa" /tmp/sdt_out
+# sed '1i /dts-v1/;\n/plugin/;' /tmp/sdt_out/pl.dtsi | dtc -@ -I dts -O dtb -o "${support_archive_name}.dtbo" -
+awk -f tools/make_overlay.awk /tmp/sdt_out/pl.dtsi | tee /tmp/pl.dts | dtc -@ -I dts -O dtb -o "${support_archive_name}.dtbo" -
+unzip -o "${support_archive_name}.xsa" "${support_archive_name}.bit"
 
-
-# https://docs.kernel.org/driver-api/fpga/fpga-region.html
-# https://www.kernel.org/doc/Documentation/devicetree/bindings/fpga/fpga-region.txt
-
-function push_if_eq(n) {
-    if (level == n) { level++ } else { print "bad" >> "/dev/stderr"; exit 1 }
+cat << EOF > /tmp/bitstream.bif
+the_ROM_image:
+{
+    "${support_archive_name}.bit"
 }
+EOF
 
-function pop_if_lt(n) {
-    if (level < n) { level-- } else { print "bad" >> "/dev/stderr"; exit 1 }
-}
-
-function check_eq(n) {
-    if (level == n) { ; } else { print "bad" >> "/dev/stderr"; exit 1 }
-}
-
-BEGIN {
-    print "/dts-v1/;\n/plugin/;\n"
-    print "/ {"
-    print "\tfragment@0 {"
-    print "\t\ttarget-path = \"/fpga-full\";"
-    print "\t\t__overlay__ {"
-
-    level = 0
-}
-
-/^\/ \{/                 { push_if_eq(0); next }
-/^\tamba_pl: amba_pl \{/ { push_if_eq(1); next }
-/^\t{0,1}\};$/           { pop_if_lt(3);  next }
-/^\t*$/                  { next }
-                         { check_eq(2);
-    # This should only work after having matched /^\t\tafi0.*{$/
-    if (match($0, /^\t\t\tcompatible = "xlnx,afi-fpga";$/)) {
-        print "\t\t\t\tcompatible = \"xlnx,zynq-afi-fpga\";"
-    } else {
-        print "\t" $0
-    }
-}
-
-END {
-    check_eq(0);
-    print "\t\t}; /* __overlay__ */"
-    print "\t}; /* fragment@0 */"
-    print "}; /* / */"
-}
+bootgen -image /tmp/bitstream.bif -arch zynq -process_bitstream bin -w on

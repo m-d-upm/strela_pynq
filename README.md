@@ -2,7 +2,7 @@
 
 ## Dependencies
 
-  * `linux-xlnx` tag `xilinx-v2025.2`
+  * `linux-xlnx` tag `xlnx_rebase_v6.1_LTS`
   * GCC 13.3.0
 
 [Xilinx/AMD are bad](https://wiki.archlinux.org/title/Xilinx_Vivado) hence we need to dedicate an entire VM to their software.
