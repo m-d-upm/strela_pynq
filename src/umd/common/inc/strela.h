@@ -11,8 +11,6 @@
 
 #define BASE_DEVICE_PATH ("/dev/strela")
 
-#define STRELA_OUT_BITS_STRIDE4_COUNT(count) (count * 4U)
-
 struct strela_csrs {
     uint32_t b;
     uint32_t a;

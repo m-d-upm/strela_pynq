@@ -21,17 +21,34 @@
 
 #include "utilities.h"
 
+typedef int32_t strela_data_t;
+
 #define DEV_NAME "/dev/strela0"
 
-//#define TRANSFER_SIZE (8192) // 32 KB
-#define TRANSFER_SIZE (20) // B
+#define EXAMINE_MEM_ELEMENTS (40)
 
-static int32_t input_data_sw[TRANSFER_SIZE];
-static int32_t output_data_sw[TRANSFER_SIZE];
+#define TRANSFER_SIZE (1024) // 4 KB
+//#define TRANSFER_SIZE (2048) // 8 KB
+//#define TRANSFER_SIZE (4096) // 16 KB
+//#define TRANSFER_SIZE (8192) // 32 KB
+//#define TRANSFER_SIZE (16384) // 64 KB
+//#define TRANSFER_SIZE (32768) // 128 KB
+//#define TRANSFER_SIZE (65536) // 256 KB
+//#define TRANSFER_SIZE (131072) // 512 KB
+//#define TRANSFER_SIZE (262144) // 1 MB
+
+//#define TRANSFER_SIZE (20) // B
+//#define TRANSFER_SIZE (80)
+
+static strela_data_t input_data_sw[TRANSFER_SIZE];
+static strela_data_t output_data_sw[TRANSFER_SIZE];
+static strela_data_t output_data_sw_from_cgra_output[TRANSFER_SIZE];
 
 #define BYPASS_KRNL_NPE (16)
 #define BYPASS_KRNL_SIZE (BYPASS_KRNL_NPE * 5)
 #define BYPASS_KRNL_BYTES (BYPASS_KRNL_SIZE * sizeof(uint32_t))
+
+//#define BYPASS_KRNL_BYTES (4096)
 
 static uint32_t bypass_kernel[BYPASS_KRNL_SIZE] = {
     0x00000021, 0x00000000, 0x00000000, 0x00000000, 0x00000000, // 12
@@ -87,9 +104,9 @@ static int strela_detach(int accel_fd, enum accel_shbuf_dir direction)
 
 void bypass_test()
 {
-    int32_t *input = NULL;
-    int32_t *result = NULL;
-    int32_t *conf = NULL;
+    strela_data_t *input = NULL;
+    strela_data_t *result = NULL;
+    strela_data_t *conf = NULL;
 
     int file_desc_strela;
 
@@ -106,9 +123,9 @@ void bypass_test()
         goto error;
     }
 
-    printf("\n---------\n");
+    printf("%u 32-bit elements to process ---------\n", TRANSFER_SIZE);
 
-    file_desc_buf_in = accel_lib_buf_alloc(TRANSFER_SIZE * sizeof(int32_t));
+    file_desc_buf_in = accel_lib_buf_alloc(TRANSFER_SIZE * sizeof(strela_data_t));
 
     if (file_desc_buf_in < 0) {
         printf("Can't allocate input dmabuf\n");
@@ -116,15 +133,13 @@ void bypass_test()
         goto error_alloc_buf_in;
     }
 
-
-    file_desc_buf_out = accel_lib_buf_alloc(TRANSFER_SIZE * sizeof(int32_t));
+    file_desc_buf_out = accel_lib_buf_alloc(TRANSFER_SIZE * sizeof(strela_data_t));
 
     if (file_desc_buf_out < 0) {
         printf("Can't allocate output dmabuf\n");
 
         goto error_alloc_buf_out;
     }
-
 
     file_desc_buf_conf = accel_lib_buf_alloc(BYPASS_KRNL_BYTES);
 
@@ -134,26 +149,28 @@ void bypass_test()
         goto error_alloc_buf_conf;
     }
 
-    input = (int32_t*) accel_lib_buf_map(file_desc_buf_in, TRANSFER_SIZE * sizeof(int32_t));
+    input = (strela_data_t*) accel_lib_buf_map(file_desc_buf_in, TRANSFER_SIZE * sizeof(strela_data_t));
 
     if(!input)
     {
         goto error_mmap_in;
     }
 
-    result = (int32_t*) accel_lib_buf_map(file_desc_buf_out, TRANSFER_SIZE * sizeof(int32_t));
+    result = (strela_data_t*) accel_lib_buf_map(file_desc_buf_out, TRANSFER_SIZE * sizeof(strela_data_t));
 
     if(!result)
     {
         goto error_mmap_out;
     }
 
-    conf = (int32_t*) accel_lib_buf_map(file_desc_buf_conf, BYPASS_KRNL_BYTES);
+    conf = (strela_data_t*) accel_lib_buf_map(file_desc_buf_conf, BYPASS_KRNL_BYTES);
 
     if(!conf)
     {
         goto error_mmap_conf;
     }
+
+    dmabuf_sync_start(file_desc_buf_in);
 
     // Populate input data
     for(int i = 0; i < TRANSFER_SIZE; i++)
@@ -161,13 +178,15 @@ void bypass_test()
         input[i] = i % 2 ? i : -i;
     }
 
+    dmabuf_sync_end(file_desc_buf_in);
+
     for(int i = 0; i < TRANSFER_SIZE; i++)
     {
         input_data_sw[i] = i % 2 ? i : -i;
     }
 
     // Read input data befor write (test cache flushing)
-    printf("OUTPUT before (first twenty 32-bit elements):\n");
+    printf("OUTPUT before (first %d 32-bit elements):\n", EXAMINE_MEM_ELEMENTS);
 
     dmabuf_sync_start(file_desc_buf_out);
 
@@ -176,13 +195,13 @@ void bypass_test()
         result[i] = 0xffffffff;
     }
 
-    dmabuf_sync_end(file_desc_buf_out);
+    examine_mem(result, 0, EXAMINE_MEM_ELEMENTS);
 
-    examine_mem(result, 0, 20);
+    dmabuf_sync_end(file_desc_buf_out);
 
     // Copy config to buffer
     uint32_t *cgra_kernel = bypass_kernel;
-    uint32_t cgra_kernel_size_words = BYPASS_KRNL_SIZE;
+    uint32_t cgra_kernel_size_bytes = BYPASS_KRNL_BYTES;
 
     printf("Copying config...\n");
 
@@ -190,7 +209,7 @@ void bypass_test()
 
     dmabuf_sync_start(file_desc_buf_conf);
 
-    memcpy(conf, cgra_kernel, cgra_kernel_size_words * sizeof(uint32_t));
+    memcpy(conf, cgra_kernel, cgra_kernel_size_bytes);
 
     dmabuf_sync_end(file_desc_buf_conf);
 
@@ -213,7 +232,7 @@ void bypass_test()
         goto error_attach_buf_conf;
     
     cgra_ctrl.csrs.conf_offs = 0;
-    cgra_ctrl.csrs.conf_count = cgra_kernel_size_words;
+    cgra_ctrl.csrs.conf_count = cgra_kernel_size_bytes;
 
     if (ioctl(file_desc_strela, IOCTL_STRELA_CONTROL, &cgra_ctrl) != 0)
     {
@@ -259,12 +278,12 @@ void bypass_test()
     cgra_ctrl.csrs.conf_count = 0;
 
     cgra_ctrl.csrs.in0_offs = 0;
-    cgra_ctrl.csrs.in0_count = TRANSFER_SIZE;
-    cgra_ctrl.csrs.in0_stride = 4;
+    cgra_ctrl.csrs.in0_count = TRANSFER_SIZE * sizeof(strela_data_t);
+    cgra_ctrl.csrs.in0_stride = sizeof(strela_data_t);
 
     cgra_ctrl.csrs.out0_offs = 0;
-    cgra_ctrl.csrs.out0_count = TRANSFER_SIZE;
-
+    cgra_ctrl.csrs.out0_count = TRANSFER_SIZE * sizeof(strela_data_t);
+    
     if (ioctl(file_desc_strela, IOCTL_STRELA_CONTROL, &cgra_ctrl) != 0)
     {
         printf("ERROR: Setting up transfer!\n");
@@ -290,58 +309,102 @@ void bypass_test()
 
     uint64_t begin_sw = micros();
 
-    for(int i = 0; i< TRANSFER_SIZE; i++)
+    for(int i = 0; i < TRANSFER_SIZE; i++)
     {
         output_data_sw[i] = input_data_sw[i];
     }
 
     uint64_t end_sw = micros();
 
-    printf("Input (first twenty 32-bit elements) -----------\n");
-    examine_mem(input, 0, 20);
+    dmabuf_sync_start(file_desc_buf_in);
+
+    printf("Input (first %d 32-bit elements) -----------\n", EXAMINE_MEM_ELEMENTS);
+    examine_mem(input, 0, EXAMINE_MEM_ELEMENTS);
+
+    dmabuf_sync_end(file_desc_buf_in);
+
+    uint64_t begin_sync_start_output = micros();
 
     dmabuf_sync_start(file_desc_buf_out);
 
-    printf("Output CGRA (first twenty 32-bit elements) -----------\n");
-    examine_mem(result, 0, 20);
+    uint64_t end_sync_start_output = micros();
+
+    uint64_t begin_sw_from_cgra_output_first_pass = micros();
+    
+    for(int i = 0; i < TRANSFER_SIZE; i++)
+    {
+        output_data_sw_from_cgra_output[i] = result[i];
+    }
+
+    uint64_t end_sw_from_cgra_output_first_pass = micros();
+
+    uint64_t begin_sw_from_cgra_output_second_pass = micros();
+    
+    for(int i = 0; i < TRANSFER_SIZE; i++)
+    {
+        output_data_sw_from_cgra_output[i] = result[i];
+    }
+
+    uint64_t end_sw_from_cgra_output_second_pass = micros();
+
+    printf("Output CGRA (first %d 32-bit elements) -----------\n", EXAMINE_MEM_ELEMENTS);
+    examine_mem(result, 0, EXAMINE_MEM_ELEMENTS);
+
+    uint64_t begin_sync_end_output = micros();
 
     dmabuf_sync_end(file_desc_buf_out);
 
-    printf("Output SW (CPU) (first twenty 32-bit elements) -----------\n");
-    examine_mem(output_data_sw, 0, 20);
+    uint64_t end_sync_end_output = micros();
+
+    printf("Output SW (CPU) (first %d 32-bit elements) -----------\n", EXAMINE_MEM_ELEMENTS);
+    examine_mem(output_data_sw, 0, EXAMINE_MEM_ELEMENTS);
 
     unsigned total_cgra = 0;
     unsigned delta_cycles;
 
     delta_cycles = end_write_config - begin_write_config;
-    printf("Write config (ms): %u\n", delta_cycles);
+    printf("Write config (us): %u\n", delta_cycles);
     total_cgra += delta_cycles;
 
     delta_cycles = end_cfg_setup_transf - begin_cfg_setup_transf;
-    printf("Setup config transfer (ms): %u\n", delta_cycles);
+    printf("Setup config transfer (us): %u\n", delta_cycles);
     total_cgra += delta_cycles;
 
     delta_cycles = end_cgra_config - begin_cgra_config;
-    printf("Config (ms): %u\n", delta_cycles);
+    printf("Config (us): %u\n", delta_cycles);
     total_cgra += delta_cycles;
 
     delta_cycles = end_setup_transf - begin_setup_transf;
-    printf("Setup transfer (ms): %u\n", delta_cycles);
+    printf("Setup transfer (us): %u\n", delta_cycles);
     total_cgra += delta_cycles;
 
     delta_cycles = end_cgra_exec - begin_cgra_exec;
-    printf("Execute (ms): %u\n", delta_cycles);
+    printf("Execute (us): %u\n", delta_cycles);
     total_cgra += delta_cycles;
 
-    printf("Total CGRA (ms): %u\n", total_cgra);
+    printf("Total CGRA (us): %u\n", total_cgra);
 
     delta_cycles = end_sw - begin_sw;
-    printf("CPU (ms): %u\n", delta_cycles);
+    printf("CPU (us): %u\n", delta_cycles);
+
+    delta_cycles = end_sync_start_output - begin_sync_start_output;
+    printf("Output buffer sync start operation (us): %u\n", delta_cycles);
+    
+    delta_cycles = end_sw_from_cgra_output_first_pass - begin_sw_from_cgra_output_first_pass;
+    printf("Copying data from CGRA output buffer after sync to userspace buffer first pass (us): %u\n", delta_cycles);
+
+    delta_cycles = end_sw_from_cgra_output_second_pass - begin_sw_from_cgra_output_second_pass;
+    printf("Copying data from CGRA output buffer after sync to userspace buffer second pass (us): %u\n", delta_cycles);
+
+    delta_cycles = end_sync_end_output - begin_sync_end_output;
+    printf("Output buffer sync end operation (us): %u\n", delta_cycles);
 
     uint64_t a, b;
     a = micros();
     b = micros();
-    printf("Min (ms): %llu\n", b - a);
+    printf("Min (us): %llu\n", b - a);
+
+    validate_buffers(result, output_data_sw, TRANSFER_SIZE * sizeof(strela_data_t));
 
     strela_attach_info.direction = ACCEL_SHBUF_DIR_IN;
     strela_attach_info.buf_fd = file_desc_buf_in;
@@ -353,9 +416,9 @@ void bypass_test()
 
     accel_lib_detach_buf_from_dev(&strela_attach_info);
 
-    accel_lib_buf_unmap(file_desc_buf_out, TRANSFER_SIZE * sizeof(int32_t));
-    accel_lib_buf_unmap(file_desc_buf_in, TRANSFER_SIZE * sizeof(int32_t));
-    accel_lib_buf_unmap(file_desc_buf_conf, BYPASS_KRNL_BYTES);
+    accel_lib_buf_unmap(result, TRANSFER_SIZE * sizeof(strela_data_t));
+    accel_lib_buf_unmap(input, TRANSFER_SIZE * sizeof(strela_data_t));
+    accel_lib_buf_unmap(conf, BYPASS_KRNL_BYTES);
     accel_lib_buf_dealloc(file_desc_buf_conf);
     accel_lib_buf_dealloc(file_desc_buf_in);
     accel_lib_buf_dealloc(file_desc_buf_out);
@@ -377,11 +440,11 @@ error_attach_buf_out:
 error_attach_buf_in:
 error_strela_ioctl_conf:
 error_attach_buf_conf:
-    accel_lib_buf_unmap(file_desc_buf_conf, BYPASS_KRNL_BYTES);
+    accel_lib_buf_unmap(conf, BYPASS_KRNL_BYTES);
 error_mmap_conf:
-    accel_lib_buf_unmap(file_desc_buf_out, TRANSFER_SIZE * sizeof(int32_t));
+    accel_lib_buf_unmap(result, TRANSFER_SIZE * sizeof(strela_data_t));
 error_mmap_out:
-    accel_lib_buf_unmap(file_desc_buf_in, TRANSFER_SIZE * sizeof(int32_t));
+    accel_lib_buf_unmap(input, TRANSFER_SIZE * sizeof(strela_data_t));
 error_mmap_in:
     accel_lib_buf_dealloc(file_desc_buf_conf);
 error_alloc_buf_conf:

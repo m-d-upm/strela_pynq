@@ -5,7 +5,7 @@ CC = $(addprefix $(TOOLCHAIN_PREFIX),$(COMPILER_SUFFIX))
 
 INCLUDES = -I./ -I../common/inc/ -I../lib
 
-SRCS_C = strela_test_main.c strela_bypass_test.c strela_relu_test.c ../common/utilities.c ../lib/dmabuf_util.c ../lib/accel_lib.c
+SRCS_C = strela_test_main.c buffer_cacheable_test.c strela_bypass_test.c strela_relu_test.c ../common/utilities.c ../lib/dmabuf_util.c ../lib/accel_lib.c
 
 OBJS_C = $(SRCS_C:.c=.o)
 

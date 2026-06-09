@@ -24,9 +24,6 @@
 #define STRELA_CTRL_BIT_PENDING_INT_CONFIG (0x4U)
 #define STRELA_CTRL_BIT_PENDING_INT_EXEC   (0x8U)
 
-#define STRELA_IN_BITS_STRIDE_COUNT(stride, count) ((stride << 16U) | (stride * count))
-#define STRELA_OUT_BITS_STRIDE4_COUNT(count)       (count * 4U)
-
 #define STRELA_CTRL_A (0x00U)
 
 #define STRELA_CONF_ADDR_A (0x04U)
@@ -55,6 +52,11 @@
 #define STRELA_CNTR_STALL_A (0x98U)
 
 #define STRELA_OUT_ARB_HOLD_A (0xA0U)
+
+#define STRELA_IN0_STRIDE_A (0xA4U)
+#define STRELA_IN1_STRIDE_A (0xA8U)
+#define STRELA_IN2_STRIDE_A (0xACU)
+#define STRELA_IN3_STRIDE_A (0xB0U)
 
 #define STRELA_RESET_DMA_A (0xF8U)
 

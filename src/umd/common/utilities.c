@@ -15,18 +15,43 @@
 // https://man7.org/linux/man-pages/man2/clock_gettime.2.html
 // https://stackoverflow.com/questions/7506952/understanding-the-different-clocks-of-clock-gettime
 
-// #define CLOCK_GETTIME_CLOCK_ID CLOCK_MONOTONIC_RAW
-#define CLOCK_GETTIME_CLOCK_ID CLOCK_PROCESS_CPUTIME_ID
+ #define CLOCK_GETTIME_CLOCK_ID CLOCK_MONOTONIC_RAW
+//#define CLOCK_GETTIME_CLOCK_ID CLOCK_PROCESS_CPUTIME_ID
 
 void examine_mem(uint32_t *ptr, uint32_t offset, uint32_t size)
 {
-    for(int i = 0; i < size; i += 2)
+    for (int i = 0; i < size; i += 2)
     {
         printf("%08x: %08x %08x\n", offset + i * 4, *(ptr + offset + i), *(ptr + offset + i + 1));
+        
         if((i / 8 + 1) % 4 == 0)
             printf("\n");
     }
 }
+
+int validate_buffers(void *buf, void *gold, uint32_t size)
+{
+    int differences_counter = 0;
+
+    uint8_t *buffer_1 = (uint8_t*)buf;
+    uint8_t *buffer_2 = (uint8_t*)gold;
+
+    for (int i = 0; i < size; i++)
+    {
+        if(buffer_1[i] != buffer_2[i])
+        {
+            ++differences_counter;
+        }
+    }
+
+    if(differences_counter)
+        printf("Buffer validation reported %d bytes differ...\n", differences_counter);
+    else
+        printf("Buffers validated successfully, no differences...\n");
+
+    return differences_counter;
+}
+
 
 // https://stackoverflow.com/questions/5833094/get-a-timestamp-in-c-in-microseconds
 

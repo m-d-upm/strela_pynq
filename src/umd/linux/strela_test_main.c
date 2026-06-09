@@ -11,6 +11,10 @@
 
 #include "bypass.h"
 
+#include "relu.h"
+
+#include "buffer_cacheable_test.h"
+
 int main(int argc, char* argv[])
 {
     //pthread_t bypass_test_th;
@@ -20,6 +24,9 @@ int main(int argc, char* argv[])
 
     printf("Running ReLu test...\r\n");
     relu_test();
+
+    //printf("Running a test to see if dmabuf(s) are cacheable...\r\n");
+    //buffer_cacheable_test();
 
     //pthread_create(&bypass_test_th, NULL, bypass_test, NULL);
     

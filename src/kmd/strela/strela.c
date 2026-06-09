@@ -56,6 +56,10 @@ struct strela_reg_addr_map {
 	void __iomem *strela_cntr_exec;
 	void __iomem *strela_cntr_stall;
 	void __iomem *strela_out_arb_hold;
+	void __iomem *strela_in0_stride;
+	void __iomem *strela_in1_stride;
+	void __iomem *strela_in2_stride;
+	void __iomem *strela_in3_stride;
 	void __iomem *strela_reset_dma;
 	void __iomem *strela_am_opa;
 	void __iomem *strela_am_opb;
@@ -181,25 +185,29 @@ static long strela_ioctl(struct file *fp, unsigned int ioctl_num, unsigned long 
 
 		// configure STRELA device's DMA addresses
 		iowrite32(strela_dev->dmabuf_in.dmaptr + strela_ctrl.csrs.conf_offs, strela_dev->regs.strela_conf_addr);
-		iowrite32(strela_ctrl.csrs.conf_count * 4U, strela_dev->regs.strela_conf_size);
+		iowrite32(strela_ctrl.csrs.conf_count, strela_dev->regs.strela_conf_size);
 
-		iowrite32(strela_dev->dmabuf_in.dmaptr + strela_ctrl.csrs.in0_offs * 4U, strela_dev->regs.strela_in0_addr);
-		iowrite32(STRELA_IN_BITS_STRIDE_COUNT(strela_ctrl.csrs.in0_stride, strela_ctrl.csrs.in0_count), strela_dev->regs.strela_in0_size);
-		iowrite32(strela_dev->dmabuf_in.dmaptr + strela_ctrl.csrs.in1_offs * 4U, strela_dev->regs.strela_in1_addr);
-		iowrite32(STRELA_IN_BITS_STRIDE_COUNT(strela_ctrl.csrs.in1_stride, strela_ctrl.csrs.in1_count), strela_dev->regs.strela_in1_size);
-		iowrite32(strela_dev->dmabuf_in.dmaptr + strela_ctrl.csrs.in2_offs * 4U, strela_dev->regs.strela_in2_addr);
-		iowrite32(STRELA_IN_BITS_STRIDE_COUNT(strela_ctrl.csrs.in2_stride, strela_ctrl.csrs.in2_count), strela_dev->regs.strela_in2_size);
-		iowrite32(strela_dev->dmabuf_in.dmaptr + strela_ctrl.csrs.in3_offs * 4U, strela_dev->regs.strela_in3_addr);
-		iowrite32(STRELA_IN_BITS_STRIDE_COUNT(strela_ctrl.csrs.in3_stride, strela_ctrl.csrs.in3_count), strela_dev->regs.strela_in3_size);
+		iowrite32(strela_dev->dmabuf_in.dmaptr + strela_ctrl.csrs.in0_offs, strela_dev->regs.strela_in0_addr);
+		iowrite32(strela_ctrl.csrs.in0_count, strela_dev->regs.strela_in0_size);
+		iowrite32(strela_ctrl.csrs.in0_stride, strela_dev->regs.strela_in0_stride);
+		iowrite32(strela_dev->dmabuf_in.dmaptr + strela_ctrl.csrs.in1_offs, strela_dev->regs.strela_in1_addr);
+		iowrite32(strela_ctrl.csrs.in1_count, strela_dev->regs.strela_in1_size);
+		iowrite32(strela_ctrl.csrs.in1_stride, strela_dev->regs.strela_in1_stride);
+		iowrite32(strela_dev->dmabuf_in.dmaptr + strela_ctrl.csrs.in2_offs, strela_dev->regs.strela_in2_addr);
+		iowrite32(strela_ctrl.csrs.in2_count, strela_dev->regs.strela_in2_size);
+		iowrite32(strela_ctrl.csrs.in2_stride, strela_dev->regs.strela_in2_stride);
+		iowrite32(strela_dev->dmabuf_in.dmaptr + strela_ctrl.csrs.in3_offs, strela_dev->regs.strela_in3_addr);
+		iowrite32(strela_ctrl.csrs.in3_count, strela_dev->regs.strela_in3_size);
+		iowrite32(strela_ctrl.csrs.in3_stride, strela_dev->regs.strela_in3_stride);
 
-		iowrite32(strela_dev->dmabuf_out.dmaptr + strela_ctrl.csrs.out0_offs * 4U, strela_dev->regs.strela_out0_addr);
-		iowrite32(strela_ctrl.csrs.out0_count * 4U, strela_dev->regs.strela_out0_size);
-		iowrite32(strela_dev->dmabuf_out.dmaptr + strela_ctrl.csrs.out1_offs * 4U, strela_dev->regs.strela_out1_addr);
-		iowrite32(strela_ctrl.csrs.out1_count * 4U, strela_dev->regs.strela_out1_size);
-		iowrite32(strela_dev->dmabuf_out.dmaptr + strela_ctrl.csrs.out2_offs * 4U, strela_dev->regs.strela_out2_addr);
-		iowrite32(strela_ctrl.csrs.out2_count * 4U, strela_dev->regs.strela_out2_size);
-		iowrite32(strela_dev->dmabuf_out.dmaptr + strela_ctrl.csrs.out3_offs * 4U, strela_dev->regs.strela_out3_addr);
-		iowrite32(strela_ctrl.csrs.out3_count * 4U, strela_dev->regs.strela_out3_size);
+		iowrite32(strela_dev->dmabuf_out.dmaptr + strela_ctrl.csrs.out0_offs, strela_dev->regs.strela_out0_addr);
+		iowrite32(strela_ctrl.csrs.out0_count, strela_dev->regs.strela_out0_size);
+		iowrite32(strela_dev->dmabuf_out.dmaptr + strela_ctrl.csrs.out1_offs, strela_dev->regs.strela_out1_addr);
+		iowrite32(strela_ctrl.csrs.out1_count, strela_dev->regs.strela_out1_size);
+		iowrite32(strela_dev->dmabuf_out.dmaptr + strela_ctrl.csrs.out2_offs, strela_dev->regs.strela_out2_addr);
+		iowrite32(strela_ctrl.csrs.out2_count, strela_dev->regs.strela_out2_size);
+		iowrite32(strela_dev->dmabuf_out.dmaptr + strela_ctrl.csrs.out3_offs, strela_dev->regs.strela_out3_addr);
+		iowrite32(strela_ctrl.csrs.out3_count, strela_dev->regs.strela_out3_size);
 
 		iowrite32(1U, strela_dev->regs.strela_out_arb_hold);
 
@@ -402,6 +410,10 @@ static int strela_probe(struct platform_device *pdev)
 	strela_dev->regs.strela_cntr_exec = strela_dev->reg + STRELA_CNTR_EXEC_A;
 	strela_dev->regs.strela_cntr_stall = strela_dev->reg + STRELA_CNTR_STALL_A;
 	strela_dev->regs.strela_out_arb_hold = strela_dev->reg + STRELA_OUT_ARB_HOLD_A;
+	strela_dev->regs.strela_in0_stride = strela_dev->reg + STRELA_IN0_STRIDE_A;
+	strela_dev->regs.strela_in1_stride = strela_dev->reg + STRELA_IN1_STRIDE_A;
+	strela_dev->regs.strela_in2_stride = strela_dev->reg + STRELA_IN2_STRIDE_A;
+	strela_dev->regs.strela_in3_stride = strela_dev->reg + STRELA_IN3_STRIDE_A;
 	strela_dev->regs.strela_reset_dma = strela_dev->reg + STRELA_RESET_DMA_A;
 	strela_dev->regs.strela_am_opa = strela_dev->reg + STRELA_AM_OPA;
 	strela_dev->regs.strela_am_opb = strela_dev->reg + STRELA_AM_OPB;
