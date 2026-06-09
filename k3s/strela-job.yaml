@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: strela-hardware-run
+spec:
+  template:
+    metadata:
+      name: strela-hardware-run
+    spec:
+      nodeName: "myrtus-pynq-1" # modify accordingly
+      restartPolicy: Never
+      containers:
+      - name: strela-container
+        image: docker.io/library/app-strela-bin:v1.0
+        imagePullPolicy: Never
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: dev-strela0
+          mountPath: /dev/strela0
+        - name: dev-strela1
+          mountPath: /dev/strela1
+        - name: dev-dma-heaps
+          mountPath: /dev/dma_heap
+      volumes:
+      - name: dev-strela0
+        hostPath:
+          path: /dev/strela0
+          type: CharDevice
+      - name: dev-strela1
+        hostPath:
+          path: /dev/strela1
+          type: CharDevice
+      - name: dev-dma-heaps
+        hostPath:
+          path: /dev/dma_heap
+          type: Directory
