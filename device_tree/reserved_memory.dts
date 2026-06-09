@@ -1,0 +1,11 @@
+reserved-memory {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    ranges;
+    linux_cma: linux,cma@0x1C000000 {
+        compatible = "shared-dma-pool";
+        reusable;
+        reg = <0x1C000000 0x04000000>; /* Reserves 64MB out of 512MB RAM starting from address 0x1C000000 */
+        linux,cma-default;
+    };
+};

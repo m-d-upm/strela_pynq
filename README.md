@@ -54,3 +54,8 @@ CONFIG_DMABUF_HEAPS
 CONFIG_DMABUF_HEAPS_SYSTEM
 CONFIG_DMABUF_HEAPS_CMA
 ```
+
+Use the Linux kernel boot argument below to specify the size and optionally the address of the CMA region:
+```
+cma=size[MG]@[start[MG][-end[MG]]]
+```
