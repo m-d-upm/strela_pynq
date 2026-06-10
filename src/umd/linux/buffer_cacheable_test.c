@@ -1,5 +1,3 @@
-#include "buffer_cacheable_test.h"
-
 #include "accel_lib.h"
 
 #include <stdio.h>
@@ -14,6 +12,8 @@
 #include <time.h>
 
 #include "utilities.h"
+
+#include "buffer_cacheable_test.h"
 
 #define TRANSFER_SIZE (8192) // 32 KB
 #define ITERATIONS    (100000)

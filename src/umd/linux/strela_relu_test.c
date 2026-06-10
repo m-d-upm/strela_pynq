@@ -21,6 +21,8 @@
 
 #include "utilities.h"
 
+#include "relu.h"
+
 typedef int32_t strela_data_t;
 
 #define DEV_NAME "/dev/strela0"
@@ -183,7 +185,7 @@ void relu_test()
         input_data_sw[i] = i % 2 ? i : -i;
     }
 
-    // Read input data befor write (test cache flushing)
+    // Read input data before write (test cache flushing)
     printf("OUTPUT before (first %d 32-bit elements):\n", EXAMINE_MEM_ELEMENTS);
 
     dmabuf_sync_start(file_desc_buf_out);
@@ -240,7 +242,7 @@ void relu_test()
 
     uint64_t end_cfg_setup_transf = micros();
 
-    // Configure 1
+    // Configure
 
     printf("Transfering config to the device...\n");
 
@@ -307,7 +309,7 @@ void relu_test()
 
     uint64_t begin_sw = micros();
 
-    for(int i = 0; i< TRANSFER_SIZE; i++)
+    for(int i = 0; i < TRANSFER_SIZE; i++)
     {
         output_data_sw[i] = input_data_sw[i] < 0 ? 0 : input_data_sw[i];
     }

@@ -21,6 +21,8 @@
 
 #include "utilities.h"
 
+#include "bypass.h"
+
 typedef int32_t strela_data_t;
 
 #define DEV_NAME "/dev/strela0"
@@ -185,7 +187,7 @@ void bypass_test()
         input_data_sw[i] = i % 2 ? i : -i;
     }
 
-    // Read input data befor write (test cache flushing)
+    // Read input data before write (test cache flushing)
     printf("OUTPUT before (first %d 32-bit elements):\n", EXAMINE_MEM_ELEMENTS);
 
     dmabuf_sync_start(file_desc_buf_out);
@@ -242,7 +244,7 @@ void bypass_test()
 
     uint64_t end_cfg_setup_transf = micros();
 
-    // Configure 1
+    // Configure
 
     printf("Transfering config to the device...\n");
 
